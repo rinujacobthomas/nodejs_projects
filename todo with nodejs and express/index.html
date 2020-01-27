@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document</title>
+</head>
+<style>
+    input {
+        border: 1px solid white;
+    }
+
+    input:hover {
+        border: 1px solid red;
+    }
+
+    li {
+        height: 2em;
+        list-style-type: none;
+    }
+
+    body {
+        text-align: center;
+    }
+
+    table {
+        display: inline;
+    }
+
+    div {
+        border: 1px solid black;
+        padding: .5em;
+        width: 25em;
+        height: auto;
+        margin-left: 31em;
+        margin-top: 1em;
+        border-radius: 5px;
+    }
+</style>
+
+
+<body>
+    <!-- <h1>TO DO List</h1> -->
+    <table>
+
+        <tr>
+            <td>
+                <input style="border:1px solid black;" id="z" type="text" class="search">
+            </td>
+            <td>
+                <button onclick="add()">add</button>
+            </td>
+        </tr>
+    </table>
+    <div>
+        <ul id="tbody">
+
+        </ul>
+    </div>
+
+    <script>
+        let todoList;
+        const tableBody = document.getElementById('tbody');
+        const inputAdd = document.getElementById('z');
+        let id = 0;
+        function load()
+        {
+            fetch('http://localhost:8081/load',{
+                method:'GET'
+            })
+            .then(res=>res.json())
+            .then(data =>{
+                todoList=data;
+                generateList();
+            })
+        }
+        load();
+        function add() {
+            const value = inputAdd.value;
+            const obj = {
+                value
+            }
+            inputAdd.value="";
+            fetch('http://localhost:8081/add', {
+                method: 'POST', headers: {
+                    'Content-Type': 'application/json',
+                }, body: JSON.stringify(obj),
+            })
+                .then(load())
+               
+        }
+        function remove(id) {
+            fetch('http://localhost:8081/' + id, { method: 'DELETE', })
+                // .then(res =>res.json())
+                .then(load())
+                .catch(err => console.log(err)
+                )
+        }
+        function update(id, newValue) {
+            const obj = {
+                "id":id,
+                "value":newValue
+            }
+            fetch('http://localhost:8081/',{
+                method:'PUT',headers:{
+                    'Content-Type':'application/json',
+                },body:JSON.stringify(obj)
+            })
+            .then(load())
+        }
+        function generateList() {
+            console.log("in generate list");
+            
+            tableBody.innerHTML = null;
+            //create li for each item in the todoList
+            console.log(todoList)
+            for (const item of todoList) {
+                const li = document.createElement('li');
+                //a delete button
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = "Delete";
+                delBtn.addEventListener('click', () => remove(item.id));
+                //const text = document.createTextNode(item.value);
+                const text = document.createElement('input');
+                text.value = item.value;
+                text.setAttribute('id', item.id + "i");
+                text.readOnly = true;
+                tableBody.appendChild(li);
+                const update = document.createElement('button');
+                update.innerHTML = "update";
+                update.setAttribute('id', item.id + "b");
+                update.addEventListener('click', () => save(item.id, item.id + "b", item.id + "i"))
+                li.append(text, update, delBtn);
+            }
+        }
+        function save(id, idb, idi) {
+            console.log('here');
+            var btn = document.getElementById(idb);
+            btn.innerHTML = "save";
+            var input = document.getElementById(idi);
+            input.readOnly = false;
+            btn.removeEventListener('click', () => save(item.id, item.id + "b", item.id + "i"))
+            btn.addEventListener('click', () => update(id, input.value));
+        }
+
+    </script>
+</body>
+
+
+</html>
